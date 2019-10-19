@@ -1355,7 +1355,7 @@ Vvveb.Builder = {
 
 		$.ajax({
 			type: "POST",
-			url: 'save.php',//set your server side save script url
+			url: 'saveChanges',//set your server side save script url
 			data: data,
 			cache: false,
 			success: function (data) {
@@ -1368,7 +1368,25 @@ Vvveb.Builder = {
 			}
 		});					
 	},
-	
+  
+  /* newPage: function (event) {
+    event.prevendDefault
+    $("#newPageForm").ajaxSubmit({
+      url: 'newPage',
+      type: 'post',
+      success: function (data) {
+				Vvveb.FileManager.addPages(
+      	[
+          { name: 'new-page', title:"New Page", url: data.url, assets: [] },
+        ])
+        Vvveb.FileManager.loadPage("narrow-jumbotron");
+      },
+      error: function (error) {
+				alert(data.responseText);
+      }
+    })
+  }, */
+
 	setDesignerMode: function(designerMode = false)
 	{
 		this.designerMode = designerMode;
@@ -1572,14 +1590,17 @@ Vvveb.Gui = {
 			if ($this.data("search").indexOf(searchText) > -1) $this.show();
 		});
 	},
-
+  showNewPage: function () {
+    var newPageModal = $('#new-page-modal');
+    newPageModal.modal("show")
+  },
 //Pages, file/components tree 
 	newPage : function () {
 		
 		var newPageModal = $('#new-page-modal');
 		
-		newPageModal.modal("show").find("form").off("submit").submit(function( event ) {
-
+		$("form#newPageForm").ajaxSubmit(function( event ) {
+      console.log('La concha de tu madre')
 			var title = $("input[name=title]", newPageModal).val();
 			var startTemplateUrl = $("select[name=startTemplateUrl]", newPageModal).val();
 			var fileName = $("input[name=fileName]", newPageModal).val();
@@ -1588,10 +1609,8 @@ Vvveb.Gui = {
 			var name = title.replace(/\W+/g, '-').toLowerCase();
 				//allow only alphanumeric, dot char for extension (eg .html) and / to allow typing full path including folders
 				fileName = fileName.replace(/[^A-Za-z0-9\.\/]+/g, '-').toLowerCase();
-			
 			//add your server url/prefix/path if needed
 			var url = "" + fileName;
-			
 
 			Vvveb.FileManager.addPage(name, title, url);
 			event.preventDefault();
