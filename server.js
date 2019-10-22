@@ -2,6 +2,7 @@ var express = require('express')
 var path = require('path')
 var bodyParser = require('body-parser')
 var fs = require('fs')
+var Inflector = require('inflected')
 const MAX_FILE_LIMIT = 1024 * 1024 * 2 // 2 MB
 
 var app = express();
@@ -23,7 +24,7 @@ app.get('/', function (req, res) {
 
 function sanitizeFileName(fileName) {
 	//sanitize, remove double dot .. and remove get parameters if any
-	fileName = __dirname + '/' + ((fileName.replace('@[^\/\\a-zA-Z0-9\-\._]@', '', )).replace('@\.{2,}@' , '')).replace('@\?.*$@' , '');
+	fileName = '/' + ((fileName.replace('@[^\/\\a-zA-Z0-9\-\._]@', '', )).replace('@\.{2,}@' , '')).replace('@\?.*$@' , '');
 	return fileName ;
 }
 
@@ -31,14 +32,14 @@ app.post('/saveChanges', function (req, res) {
   let html = "", startTemplateUrl
 
   if (req.body.startTemplateUrl) {
-    startTemplateUrl = sanitizeFileName(req.body.startTemplateUrl)
+    startTemplateUrl = __dirname + sanitizeFileName(req.body.startTemplateUrl)
     // html = file_get_contents(startTemplateUrl)
     html = fs.readFileSync(startTemplateUrl).toString()
   } else if (req.body.html) {
     html = req.body.html.substring(0, MAX_FILE_LIMIT)
   }
   console.log('Wtf', )
-  fileName = sanitizeFileName(req.body.fileName)
+  fileName = __dirname + sanitizeFileName(req.body.fileName)
 
   fs.writeFile(fileName, html, 'utf8', function (err) {
     if (err) {
@@ -51,19 +52,61 @@ app.post('/saveChanges', function (req, res) {
 
 })
 
-app.post('/new_pages', (req, res) => {
-  let pageRef = req.body,  fileDir, shortName
+app.get('/get_pages', function (req, res) {
 
-  let html = fs.readFileSync('new-page-blank-template.html').toString()
-  fileDir = __dirname + 'pages/' + sanitizeFileName(pageRef.fileName)
-  shorrName = 'pages/' + sanitizeFileName(pageRef.fileName)
+  function walkSync(dir, filelist, page) {
+    var files = fs.readdirSync(dir)
+    filelist = filelist || []
+  
+    files.forEach(function(file) {
+      if (fs.statSync(dir + file).isDirectory()) {
+        let url = 'pages/' + file
+        let page = {
+          name: Inflector.underscore(file),
+          title: Inflector.titleize(Inflector.camelize(Inflector.underscore(file))),
+          baseUrl: url,
+          url: url, assets: []
+        }
 
-  fs.writeFile(fileDir, html, (err) => {
+        filelist = walkSync(dir + file + '/', filelist, page)
+      }
+
+      else {
+        let name = file.split('.')[0]
+        let type = file.split('.')[1]
+
+        if (type === 'html') {
+          page.url = page.url + '/' + file
+          filelist.push(page)
+        } else {
+          page.assets.push(page.baseUrl + '/' + file)
+        }
+      }
+    })
+  
+    return filelist
+  }
+
+  let files = walkSync(__dirname + '/pages/')
+
+  res.status(200).send(files)
+})
+
+app.post('/new_page', (req, res) => {
+  let pageRef = req.body,  fileDir, shortName, dir
+
+  let html = fs.readFileSync(__dirname + '/new-page-blank-template.html').toString()
+  let dirName = pageRef.fileName.split('.')[0]
+
+  fileDir = __dirname + '/pages' + sanitizeFileName(dirName)
+  shortName = 'pages/' + dirName + '/index.html'
+  fs.mkdirSync(fileDir)
+
+  fs.writeFile(__dirname + '/' + shortName, html, (err) => {
     if (err) {
       console.log(err)
       return res.status(500).send(err)
     }
-
     res.status(200).send({ url: shortName })
   })
 })

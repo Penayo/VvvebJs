@@ -28,15 +28,15 @@ https://github.com/givanz/VvvebJs
 	var fn = /^[-a-zA-Z0-9]+$/.test(str) ?
       cache[str] = cache[str] ||
         tmpl(document.getElementById(str).innerHTML) :
-              
+
       // Generate a reusable function that will serve as a template
       // generator (and which will be cached).
       new Function("obj",
         "var p=[],print=function(){p.push.apply(p,arguments);};" +
-         
+
         // Introduce the data as local variables using with(){}
         "with(obj){p.push('" +
-         
+
         // Convert the template into pure JavaScript
         str
           .replace(/[\r\t\n]/g, " ")
@@ -1368,24 +1368,6 @@ Vvveb.Builder = {
 			}
 		});					
 	},
-  
-  /* newPage: function (event) {
-    event.prevendDefault
-    $("#newPageForm").ajaxSubmit({
-      url: 'newPage',
-      type: 'post',
-      success: function (data) {
-				Vvveb.FileManager.addPages(
-      	[
-          { name: 'new-page', title:"New Page", url: data.url, assets: [] },
-        ])
-        Vvveb.FileManager.loadPage("narrow-jumbotron");
-      },
-      error: function (error) {
-				alert(data.responseText);
-      }
-    })
-  }, */
 
 	setDesignerMode: function(designerMode = false)
 	{
@@ -1598,10 +1580,30 @@ Vvveb.Gui = {
 	newPage : function () {
 		
 		var newPageModal = $('#new-page-modal');
-		
-		$("form#newPageForm").ajaxSubmit(function( event ) {
-      console.log('La concha de tu madre')
-			var title = $("input[name=title]", newPageModal).val();
+    var data = {}
+    data.title = $("input[name=title]", newPageModal).val();
+    data.startTemplateUrl = $("select[name=startTemplateUrl]", newPageModal).val();
+    data.fileName = $("input[name=fileName]", newPageModal).val();
+    data.name = data.title.replace(/\W+/g, '-').toLowerCase();
+
+    $("form#newPageForm").submit(function(event) {
+      event.preventDefault();
+      $.post({
+        url: 'new_page',
+        type: 'post',
+        data: data,
+        success: function (result) {
+          var page = { name: data.name, title: data.title, url: result.url, assets: [] }
+          Vvveb.FileManager.addPages([page])
+          Vvveb.FileManager.loadPage(data.name);
+          Vvveb.FileManager.scrollBottom();
+					newPageModal.modal("hide");
+        },
+        error: function (error) {
+          alert(data.responseText);
+        }
+      })
+			/* var title = $("input[name=title]", newPageModal).val();
 			var startTemplateUrl = $("select[name=startTemplateUrl]", newPageModal).val();
 			var fileName = $("input[name=fileName]", newPageModal).val();
 			
@@ -1609,18 +1611,19 @@ Vvveb.Gui = {
 			var name = title.replace(/\W+/g, '-').toLowerCase();
 				//allow only alphanumeric, dot char for extension (eg .html) and / to allow typing full path including folders
 				fileName = fileName.replace(/[^A-Za-z0-9\.\/]+/g, '-').toLowerCase();
-			//add your server url/prefix/path if needed
+      //add your server url/prefix/path if needed
 			var url = "" + fileName;
 
-			Vvveb.FileManager.addPage(name, title, url);
+      Vvveb.FileManager.addPage(name, title, url);
+      console.log('La concha de tu madre', url)
 			event.preventDefault();
 
 			return Vvveb.Builder.saveAjax(url, startTemplateUrl, function (data) {
 					Vvveb.FileManager.loadPage(name);
 					Vvveb.FileManager.scrollBottom();
 					newPageModal.modal("hide");
-			});
-		});
+			}); */
+    });
 		
 	},
 	
@@ -1763,10 +1766,8 @@ Vvveb.FileManager = {
 	},
 	
 	addPage: function(name, data) {
-		
 		this.pages[name] = data;
-		data['name'] = name;
-		
+    data['name'] = name;
 		this.tree.append(
 			tmpl("vvveb-filemanager-page", data));
 	},
@@ -1877,7 +1878,8 @@ Vvveb.FileManager = {
 		$("[data-page]", this.tree).removeClass("active");
 		$("[data-page='" + name + "']", this.tree).addClass("active");
 		
-		this.currentPage = name;
+    this.currentPage = name;
+    console.log(this.pages[name])
 		var url = this.pages[name]['url'];
 		
 		Vvveb.Builder.loadUrl(url + (disableCache ? (url.indexOf('?') > -1?'&':'?') + Math.random():''), 
