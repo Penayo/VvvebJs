@@ -3,6 +3,28 @@ var path = require('path')
 var bodyParser = require('body-parser')
 var fs = require('fs')
 var Inflector = require('inflected')
+var multer = require('multer')
+// SET STORAGE
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    console.log(req.params)
+    if (file.mimetype.split('/')[0] === 'image') {
+      if (!fs.existsSync(__dirname + '/pages/' + req.params.page + '/img')) {
+        fs.mkdirSync(__dirname + '/pages/' + req.params.page + '/img')
+      }
+      cb(null, 'pages/' + req.params.page + '/img')
+    } else {
+        cb(null, 'pages/public')
+    }
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+})
+
+var upload_middleware = multer({ storage: storage })
+
+
 const MAX_FILE_LIMIT = 1024 * 1024 * 2 // 2 MB
 
 var app = express();
@@ -90,6 +112,24 @@ app.get('/get_pages', function (req, res) {
   let files = walkSync(__dirname + '/pages/')
 
   res.status(200).send(files)
+})
+
+app.post('/upload/:page', upload_middleware.single('file'), function (req, res) {
+  const file = req.file
+
+  if (!file) {
+    const error = new Error('Please upload a file')
+    error.httpStatusCode = 400
+    return res.status(500).send(error)
+  }
+  console.log(file)
+  console.log(file.path.replace('pages\\' + req.params.page + '\\', ''))
+  res.send(file.path.replace('pages\\' + req.params.page + '\\', ''))
+
+  /* res
+    .status(200)
+    .send('File uploaded successfully!') */
+
 })
 
 app.post('/new_page', (req, res) => {

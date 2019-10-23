@@ -19,6 +19,7 @@
     "expressjs": "^1.0.1",
     "inflected": "^2.0.4",
     "jquery": "^3.0",
+    "multer": "^1.4.2",
     "vash": "^0.12.6"
   },
   "keywords": [

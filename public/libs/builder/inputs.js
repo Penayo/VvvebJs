@@ -256,29 +256,30 @@ var ImageInput = $.extend({}, Input, {
 	},
 
 	onUpload: function(event, node) {
-
 		if (this.files && this.files[0]) {
-            var reader = new FileReader();
-            reader.onload = imageIsLoaded;
-            reader.readAsDataURL(this.files[0]);
-            //reader.readAsBinaryString(this.files[0]);
-            file = this.files[0];
-        }
+      var reader = new FileReader();
+      reader.onload = imageIsLoaded ;
+      reader.readAsDataURL(this.files[0]);
+      //reader.readAsBinaryString(this.files[0]);
+      file = this.files[0];
+    }
 
 		function imageIsLoaded(e) {
 				
 				image = e.target.result;
-				
 				event.data.element.trigger('propertyChange', [image, this]);
 				
 				//return;//remove this line to enable php upload
 
-				var formData = new FormData();
-				formData.append("file", file);
-    
+        var formData = new FormData();
+        file.page = Vvveb.FileManager.currentPage
+        console.log(file)
+        formData.append("file", file);
+        formData.append('page', Vvveb.FileManager.currentPage)
+
 				$.ajax({
 					type: "POST",
-					url: 'upload.php',//set your server side upload script url
+					url: 'upload/' + Vvveb.FileManager.currentPage, //set your server side upload script url
 					data: formData,
 					processData: false,
 					contentType: false,
@@ -286,7 +287,7 @@ var ImageInput = $.extend({}, Input, {
 						console.log("File uploaded at: ", data);
 						
 						//if image is succesfully uploaded set image url
-						event.data.element.trigger('propertyChange', [data, this]);
+						// event.data.element.trigger('propertyChange', [data, this]);
 						
 						//update src input
 						$('input[type="text"]', event.data.element).val(data);
