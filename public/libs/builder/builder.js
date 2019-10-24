@@ -1603,30 +1603,37 @@ Vvveb.Gui = {
           alert(data.responseText);
         }
       })
-			/* var title = $("input[name=title]", newPageModal).val();
-			var startTemplateUrl = $("select[name=startTemplateUrl]", newPageModal).val();
-			var fileName = $("input[name=fileName]", newPageModal).val();
-			
-			//replace nonalphanumeric with dashes and lowercase for name
-			var name = title.replace(/\W+/g, '-').toLowerCase();
-				//allow only alphanumeric, dot char for extension (eg .html) and / to allow typing full path including folders
-				fileName = fileName.replace(/[^A-Za-z0-9\.\/]+/g, '-').toLowerCase();
-      //add your server url/prefix/path if needed
-			var url = "" + fileName;
-
-      Vvveb.FileManager.addPage(name, title, url);
-      console.log('La concha de tu madre', url)
-			event.preventDefault();
-
-			return Vvveb.Builder.saveAjax(url, startTemplateUrl, function (data) {
-					Vvveb.FileManager.loadPage(name);
-					Vvveb.FileManager.scrollBottom();
-					newPageModal.modal("hide");
-			}); */
     });
 		
 	},
-	
+  
+  addTemplate: function () {
+    var input = document.createElement('input')
+    input.type = 'file'
+    input.onchange = e => {
+      var file = e.target.files[0]
+      var formData = new FormData();
+      formData.append("file", file);
+
+      $.ajax({
+        type: "POST",
+        url: 'add_template', //set your server side upload script url
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+          console.log(data)
+        },
+        error: function (data) {
+          alert(data.responseText);
+        }
+      });
+    }
+
+    input.click()
+
+  },
+
 	deletePage : function () {
 		
 	},
@@ -1867,8 +1874,8 @@ Vvveb.FileManager = {
 	getCurrentUrl: function() {
 		if (this.currentPage)
 		return this.pages[this.currentPage]['url'];
-	},
-	
+  },
+
 	reloadCurrentPage: function() {
 		if (this.currentPage)
 		return this.loadPage(this.currentPage);
@@ -1883,7 +1890,7 @@ Vvveb.FileManager = {
 		var url = this.pages[name]['url'];
 		
 		Vvveb.Builder.loadUrl(url + (disableCache ? (url.indexOf('?') > -1?'&':'?') + Math.random():''), 
-			function () { 
+			function () {
 				Vvveb.FileManager.loadComponents(allowedComponents); 
 			});
 	},

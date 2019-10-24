@@ -265,30 +265,27 @@ var ImageInput = $.extend({}, Input, {
     }
 
 		function imageIsLoaded(e) {
-				
+
 				image = e.target.result;
 				event.data.element.trigger('propertyChange', [image, this]);
-				
+
 				//return;//remove this line to enable php upload
 
         var formData = new FormData();
-        file.page = Vvveb.FileManager.currentPage
-        console.log(file)
         formData.append("file", file);
-        formData.append('page', Vvveb.FileManager.currentPage)
 
 				$.ajax({
 					type: "POST",
-					url: 'upload/' + Vvveb.FileManager.currentPage, //set your server side upload script url
+					url: 'upload', // + Vvveb.FileManager.currentPage, //set your server side upload script url
 					data: formData,
 					processData: false,
 					contentType: false,
 					success: function (data) {
 						console.log("File uploaded at: ", data);
-						
+
 						//if image is succesfully uploaded set image url
-						// event.data.element.trigger('propertyChange', [data, this]);
-						
+						event.data.element.trigger('propertyChange', [data, this]);
+
 						//update src input
 						$('input[type="text"]', event.data.element).val(data);
 					},

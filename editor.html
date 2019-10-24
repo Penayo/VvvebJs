@@ -98,7 +98,11 @@
 								<a href="#" class="text-secondary">Pages</a>
 
 									<div class="btn-group responsive-btns mr-4 float-right" role="group">
-									  <button class="btn btn-link btn-sm" title="New file" id="new-file-btn" data-vvveb-action="showNewPage" data-vvveb-shortcut="">
+									  <button class="btn btn-link btn-sm" title="Add Template" data-vvveb-action="addTemplate">
+										  <i class="la la-file"></i> <small>Add Template</small>
+                    </button>
+
+                    <button class="btn btn-link btn-sm" title="New file" id="new-file-btn" data-vvveb-action="showNewPage" data-vvveb-shortcut="">
 										  <i class="la la-file"></i> <small>New page</small>
 									  </button>
 									  
@@ -956,7 +960,11 @@ $(document).ready(function()
   $.get('/get_pages', function (data) {
     console.log(data)
     Vvveb.FileManager.addPages(data)
-    Vvveb.FileManager.loadPage(data[0].name)
+    let index = data.find(page => {
+      return page.name.toLowerCase() === 'index' 
+    })
+
+    Vvveb.FileManager.loadPage(index.name || data[0].name)
   })
 
 	/* Vvveb.FileManager.addPages(
